@@ -16,18 +16,25 @@ from utils import (
     save_predictions_as_imgs,
 )
 
-def train_fn(epoch,numEpochs, train_dataset, model, optimizer, loss_fn, DEVICE):
+def train_fn(epoch,numEpochs, train_dataset, model, optimizer, loss_fn, DEVICE,n):
 
     #loop = tqdm(train_dataset)
 
     trainingLoss = 0.0
-    n = get_dataset_length(train_dataset)
+    #print("getting length .... ")
+    #n = get_dataset_length(train_dataset)
     for batch_idx, (data, targets) in enumerate(train_dataset):
         sTime = time.time()
+        #print("getting the gradient tape ....." )
         with tf.GradientTape() as tape:
+            #print("getting predictions .... ")
             predictions = model(data, training=True)
+            #print("getting loss .... ")
             loss = loss_fn(targets, predictions)
+        
+        #print("getting gradients .... ")
         gradients = tape.gradient(loss, model.trainable_variables)
+        #print("getting optimizer .... ")        
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
         stepTm = time.time()-sTime
@@ -99,6 +106,7 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
     imgLsts = getImagesList(image_dir, rt=dataRatios, doPrint=1)
     trnLst, valLst, tstLst = imgLsts
     train_dataset, val_dataset = get_loaders(image_dir, trnLst, valLst, BATCH_SIZE, train_transform, val_transforms)
+    n = len([i for i,x in enumerate(train_dataset)])
 
     if LOAD_MODEL:
        tf.keras.models.load_model(finalModelPath, custom_objects=model)
@@ -111,7 +119,7 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
     for epoch in range(NUM_EPOCHS):
       
         sTime= time.time()
-        trainingLoss = train_fn(epoch,NUM_EPOCHS, train_dataset, model, optimizer, loss_fn, DEVICE)
+        trainingLoss = train_fn(epoch,NUM_EPOCHS, train_dataset, model, optimizer, loss_fn, DEVICE,n)
         eTime= round(time.time()-sTime,2)
 
         valData = []

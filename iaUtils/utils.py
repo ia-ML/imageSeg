@@ -3,6 +3,8 @@
 import os, sys, time, shutil, csv, json, cv2
 import SimpleITK as sitk
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from collections import Counter
 from PIL import Image
@@ -188,3 +190,23 @@ def save_predictions_as_imgs(data, folder="saved_images/"):
         prd = mergeSaveImages(p, os.path.join(folder, "img_" + str(idx) + "_prd.png"),0)
         blended_image = Image.blend(img, prd, alpha=0.5)
         blended_image.save(os.path.join(folder, "img_" + str(idx) + "_img-prd.png"))    
+
+def plotLoss(csvPath, doSave=1, doShow=0):
+
+    #Read the CSV file
+    df = pd.read_csv(csvPath,  index_col=False) 
+    plt.figure(figsize=(10, 6))
+    plt.plot(df['epoch'], df['trainingLoss'],   label='Training',   color='blue')
+    plt.plot(df['epoch'], df['validationLoss'], label='Validation', color='red')
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Value')
+    plt.title('Training and Validation Losses per Epochs')
+    plt.legend()
+
+    if doSave: 
+       file_path, filename = os.path.split(csvPath)
+       outputPath =os.path.join(file_path,filename[:-7]+"result.png") 
+       plt.savefig(outputPath)  # Saves the plot as 'plot.png'
+    if doShow:
+       plt.show()  # Optionally display the plot

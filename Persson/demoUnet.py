@@ -1,7 +1,7 @@
 import os, sys, cv2, torch, time, shutil
 
-doTorchTraining = 0
-doTFTraining    = 1
+doTorchTraining = 1
+doTFTraining    = 0
 
 unetLibPath    =os.path.expanduser("~/myGit/DNNs/imageSeg/Persson/pnUnet")
 iaUtilsLibPath =os.path.expanduser("~/myGit/DNNs/imageSeg/iaUtils")
@@ -11,9 +11,10 @@ datasetPath  = "/mnt/tnasData/dnnData/Carvana" # CarvanaDataset
 image_dir    = os.path.join(datasetPath,"inputData")
 output_dir   = os.path.join(datasetPath,"outputData")   
 
+
 NUM_EPOCHS    = 5
 NUM_WORKERS   = 1
-BATCH_SIZE    = 4
+BATCH_SIZE    = 8
 LEARNING_RATE = 1e-4
 # IMAGE_HEIGHT  = 160  # 1280 originally 480,320
 # IMAGE_WIDTH   = 240  # 1918 originally
@@ -22,19 +23,20 @@ IMAGE_WIDTH   = 480  # 1918 originally
 PIN_MEMORY    = True
 LOAD_MODEL    = False
 NUM_CLASSES = 1
-dataRatios=[0.90, 0.15, 0.0]
-#Reset files:
-# one may need to backup the folder
-if os.path.exists(output_dir):
-    # Remove the directory and all its contents
-    shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
+dataRatios=[0.50, 0.05, 0.0]
 
 # add our repository to python path
 sys.path.append(unetLibPath)
 sys.path.append(iaUtilsLibPath)
 
 import utils 
+
+#Reset files:
+# one may need to backup the folder
+if os.path.exists(output_dir):
+    # Remove the directory and all its contents
+    shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
 
 # check class size:
 doCheckClassSize = 0

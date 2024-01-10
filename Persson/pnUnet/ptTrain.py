@@ -14,6 +14,7 @@ from utils import (
     getImagesList,
     check_accuracy,
     save_predictions_as_imgs,
+    plotLoss
 )
 
 
@@ -169,6 +170,7 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
         with open(logPath, 'a') as file:
                 file.write(line + '\n')
         file.close()
+        plotLoss(logPath, doSave=1, doShow=0)
 
     torch.save(checkpoint, finalModelPath)
 

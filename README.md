@@ -42,8 +42,7 @@ Image Segmentation Using U-Net
 ### TODOS:
 
   - Complete functionality
-    - [ ] Cleaning 
-    - [ ] iaUtils/utils: log and plots
+    - [ ] Add complete dataset pre-processing steps    
     - [ ] iaUtils/aug: Augmentation
         - [ ] use opencv 
         - [ ] add support to offline and online augmentaion
@@ -52,12 +51,11 @@ Image Segmentation Using U-Net
         -data: # from this we create train, validation, and test
         - img
         - seg
-    - [ ] Add complete dataset pre-processing steps    
   - [ ] Test on datasets for binary and semantic segmentation e.g. spine cochlea 
-  - [ ] Add another TF implementation
+  - [ ] Add DigitalSreeni implementation
   - [ ] Add the kaggle Carvana winner implementation
   - [ ] Impement 3D Model
   - [ ] Add sample results to the readme file 
         - images, plots 
   - [ ] Add pre-trained models and sample demo files
-
+- [ ] Add [Segment Anything Model (SAM) implementation](https://www.youtube.com/watch?v=83tnWs_YBRQ)
