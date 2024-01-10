@@ -14,6 +14,7 @@ from utils import (
     getImagesList,
     check_accuracy,
     save_predictions_as_imgs,
+    plotLoss
 )
 
 def train_fn(epoch,numEpochs, train_dataset, model, optimizer, loss_fn, DEVICE,n):
@@ -147,6 +148,7 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
         # save model
         modelPath = os.path.join(output_dir,datasetName+"_"+str(NUM_CLASSES)+"_"+str(epoch)+"_model_pth.keras")
         model.save(modelPath)
+        plotLoss(logPath, doSave=1, doShow=0)
 
     model.save(finalModelPath)
 
