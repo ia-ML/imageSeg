@@ -4,6 +4,9 @@ Important note: this work is still not complete ...
 
 2D and 3D image segmentation for binary (semantic segmentation) or multi-class (instance segmentation) using Deep Learning.
 
+![Segmentation](https://miro.medium.com/v2/resize:fit:828/format:webp/0*QeOs5RvXlkbDkLOy.png "Image Segmentation")
+
+
 This is a useful resource for image segmentation. It contains collection of different PyTorch and Tensorflow implementation with their video explaination in Youtube.  
 
 The discuession section is helpful to exchange information and ask questions. 
