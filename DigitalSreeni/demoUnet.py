@@ -17,7 +17,7 @@ output_dir   = os.path.join(datasetPath,"outputData")
 
 NUM_EPOCHS    = 100
 NUM_WORKERS   = 1
-BATCH_SIZE    = 8
+BATCH_SIZE    = 16
 LEARNING_RATE = 1e-4
 # IMAGE_HEIGHT  = 160  # 1280 originally 480,320
 # IMAGE_WIDTH   = 240  # 1918 originally

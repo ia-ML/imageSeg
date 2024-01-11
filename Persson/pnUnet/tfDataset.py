@@ -10,12 +10,14 @@ class CarvanaDataset:
         self.image_dir = image_dir
         self.imgFnmsLst = imgFnmsLst
         self.transform = transform
-
+        # if offline augmentation:
+        # augment the data here 
+        
     def __len__(self):
         return len(self.imgFnmsLst)
 
     def __getitem__(self, index):
-        img_path = os.path.join(self.image_dir, self.imgFnmsLst[index][0])
+        img_path  = os.path.join(self.image_dir, self.imgFnmsLst[index][0])
         mask_path = os.path.join(self.image_dir, self.imgFnmsLst[index][1])
         image = np.array(Image.open(img_path).convert("RGB"))
         mask = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)

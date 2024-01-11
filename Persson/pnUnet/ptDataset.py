@@ -16,7 +16,8 @@ class CarvanaDataset(Dataset):
     #     self.mask_dir  = mask_dir
     #     self.transform = transform
     #     self.images = os.listdir(image_dir)
-    def __init__(self, image_dir, imgFnmsLst, transform=None):
+    def __init__(self, image_dir, imgFnmsLst, transform=None,
+                      datasetStructure=0, segExtension="mask", onlineAugmentation=1):
         self.image_dir = image_dir
         # [[train0,mask0],[train1,mask1],...,etc]
         self.imgFnmsLst  = imgFnmsLst
@@ -26,43 +27,14 @@ class CarvanaDataset(Dataset):
     def __len__(self):
         return len(self.imgFnmsLst)
 
-    # def __getitem__(self, index):
-    #     img_path  = os.path.join(self.image_dir, self.images[index])
-    #     mask_path = os.path.join(self.mask_dir, self.images[index].replace(".jpg", "_mask.gif"))
-    #     image     = np.array(Image.open(img_path).convert("RGB"))
-    #     mask     = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
-    #     mask[mask == 255.0] = 1.0
-
-    #     if self.transform is not None:
-    #         augmentations = self.transform(image=image, mask=mask)
-    #         image = augmentations["image"]
-    #         mask  = augmentations["mask"]
-    #     return image, mask
-
     def __getitem__(self, index):
-        # print("CarvanaDataset.__getitem__: length    : ",len(self.imgFnmsLst))
-        # print("CarvanaDataset.__getitem__: length [0]: ",len(self.imgFnmsLst[0]))
-        # print("CarvanaDataset.__getitem__: [0][0]    : ",len(self.imgFnmsLst[0][0]))
-        # print("CarvanaDataset.__getitem__: [0][1]    : ",len(self.imgFnmsLst[0][1]))
         img_path  = os.path.join(self.image_dir, self.imgFnmsLst[index][0])
         mask_path = os.path.join(self.image_dir, self.imgFnmsLst[index][1])
         image   = np.array(Image.open(img_path).convert("RGB"))
-        # #Normalization
-        # image   = image / 255.0
-
-        # Calculate the mean and standard deviation of the pixel values
-        # mean = np.mean(image, axis=(0, 1))
-        # std = np.std(image, axis=(0, 1))
-        
-        # # Standardize the image
-        # image = (image - mean) / std
 
         mask      = np.array(Image.open(mask_path).convert("L"), dtype=np.float32)
-        #print("mask min max set: ",self.imgFnmsLst[index][1], np.min(mask),np.max(mask),len(np.unique(mask)))
         mask[mask <  128.0] = 0.0
         mask[mask >= 128.0] = 1.0
-        #print("mask min max set: ",self.imgFnmsLst[index][1], np.min(mask),np.max(mask),len(np.unique(mask)))
-        #print(ok)
 
         if self.transform is not None:
             augmentations = self.transform(image=image, mask=mask)
@@ -79,12 +51,18 @@ def get_loaders(
     val_transform,
     num_workers=4,
     pin_memory=True,
+    datasetStructure=0,
+    segExtension="mask",
+    onlineAugmentation=1
 ):
     
     train_ds = CarvanaDataset(
         image_dir  = image_dir,
         imgFnmsLst = trnLst, 
         transform = train_transform,
+        datasetStructure=0,
+        segExtension="mask",
+        onlineAugmentation=1
     )
 
     train_loader = DataLoader(

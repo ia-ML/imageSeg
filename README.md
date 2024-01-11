@@ -2,7 +2,7 @@
 
 Important note: this work is still not complete ...
 
-2D and 3D image segmentation for binary or multi-class (semantic segmentation) using Deep Learning.
+2D and 3D image segmentation for binary (semantic segmentation) or multi-class (instance segmentation) using Deep Learning.
 
 This is a useful resource for image segmentation. It contains collection of different PyTorch and Tensorflow implementation with their video explaination in Youtube.  
 
@@ -31,7 +31,7 @@ Image Segmentation Using U-Net
 
   - DigitalSreeni: 2D implementation and explaination by DigitalSreeni.
     - Paper explaination: [video](https://youtu.be/azM57JuQpQI?si=bHNzo8a-NFLbXRn1)
-    - Paper implementation videos: [1](https://youtu.be/IHq1t7NxS8k?si=cd-9x6pnHLFMCdgg),[2](https://youtu.be/68HR_eyzk00?si=ND08rdEAWQzf9lM2),[3](https://www.youtube.com/watch?v=sb0uglcqO2Y&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=3),[4](https://www.youtube.com/watch?v=0kiroPnV1tM&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=4),[5](https://www.youtube.com/watch?v=cUHPL_dk17E&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=5),[6](https://www.youtube.com/watch?v=RaswBvMnFxk&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=6),[7](https://www.youtube.com/watch?v=J_XSd_u_Yew&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=8)
+    - Paper implementation videos: [1](https://youtu.be/azM57JuQpQI?si=d85pKOlDoJPcasmF),[2](https://youtu.be/68HR_eyzk00?si=ND08rdEAWQzf9lM2),[3](https://www.youtube.com/watch?v=sb0uglcqO2Y&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=3),[4](https://www.youtube.com/watch?v=0kiroPnV1tM&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=4),[5](https://www.youtube.com/watch?v=cUHPL_dk17E&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=5),[6](https://www.youtube.com/watch?v=RaswBvMnFxk&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=6),[7](https://www.youtube.com/watch?v=J_XSd_u_Yew&list=PLZsOBAyNTZwbR08R959iCvYT3qzhxvGOE&index=8)
     - Dataset: 
     - DigitalSreeni Code (keras): [Segmentation U-Net](https://github.com/bnsreenu/python_for_microscopists/blob/master/074-Defining%20U-net%20in%20Python%20using%20Keras.py)
     - To run:
@@ -54,6 +54,7 @@ Image Segmentation Using U-Net
   - [ ] Test on datasets for binary and semantic segmentation e.g. spine cochlea 
   - [ ] Add DigitalSreeni implementation
   - [ ] Add the kaggle Carvana winner implementation
+        - [Code for Dice: 0.99733](https://github.com/asanakoy/kaggle_carvana_segmentation)
   - [ ] Impement 3D Model
   - [ ] Add sample results to the readme file 
         - images, plots 

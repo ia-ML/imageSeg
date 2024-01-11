@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from collections import Counter
 from PIL import Image
 
-
+  
 # Change image format e.g. from gif to png
 # requires pip install pillow
 def imageReformat(inputFolderPath, inputFormat=None,  outputFormat="png", outputFolderPath=None):
@@ -56,12 +56,6 @@ def imageReformat(inputFolderPath, inputFormat=None,  outputFormat="png", output
     # cmd = 'for file in '+inputPath+'/*.gif; do convert "$file" '+outputPath+'"/${file%.*}.png" done'
     # os.system(cmd)
 
-
-import os, time, cv2
-from collections import Counter
-from PIL import Image
-import numpy as np
-
 def gif2png(inputPath,outputPath):
     #sudo apt install imagemagick
     cmd = 'for file in '+inputPath+'/*.gif; do convert "$file" '+outputPath+'"/${file%.*}.png" done'
@@ -88,7 +82,14 @@ def getClassSize(imgPath,isBin=1):
         classSizeLst.append([pixel_value,cSize])
     return classSizeLst
 
-def getImagesList(imagePath, rt = [0.70, 0.10, 0.20], doPrint=1):
+def getImagesList(imagePath, rt = [0.70, 0.10, 0.20], 
+                  doPrint=1,
+                  datasetStructure=0,
+                  segExtension="mask",                                 
+                  onlineAugmentation=1  ):
+    # TODO: do random sampling
+    # use offline augmentation option
+    # use datasetstructure option
     fnms = sorted(os.listdir(imagePath))
     img_fnms = sorted([x for x in fnms if not "mask" in x])
     msk_fnms = sorted([x for x in fnms if     "mask" in x])
@@ -152,11 +153,15 @@ def resizeImages(imagePath, maskPath, outputPath, newSize = (480,320) ):
 
 def check_accuracy(valData):
     dice_score  = 0
-    for x, y, p in valData:
-        dice = (2 * (p * y).sum()) / ((p + y).sum() + 1e-8 )
-        dice_score += dice
-    dice_score = dice_score/len(valData)
-    validationLoss = round(1.0- dice_score,2)
+    if len(valData)==2:
+        p,y = valData
+        dice_score = (2 * (p * y).sum()) / ((p + y).sum() + 1e-8 )
+    else:
+        for x, y, p in valData:
+            dice = (2 * (p * y).sum()) / ((p + y).sum() + 1e-8 )
+            dice_score += dice
+        dice_score = dice_score/len(valData)
+    validationLoss = round(1.0- dice_score,4)
     return validationLoss
 
 
@@ -184,12 +189,17 @@ def mergeSaveImages(x, filePath,doSave=1):
     return composite_image
 
 def save_predictions_as_imgs(data, folder="saved_images/"):
+    # TODO: get random 10 images
     for idx, (x, y, p) in enumerate(data):
-        img = mergeSaveImages(x, os.path.join(folder, "img_" + str(idx) + "_img.png"),0)
-        seg = mergeSaveImages(y, os.path.join(folder, "img_" + str(idx) + "_seg.png"),0)
-        prd = mergeSaveImages(p, os.path.join(folder, "img_" + str(idx) + "_prd.png"),0)
-        blended_image = Image.blend(img, prd, alpha=0.5)
-        blended_image.save(os.path.join(folder, "img_" + str(idx) + "_img-prd.png"))    
+        # get only first 10 images 
+        if idx <11:
+            img = mergeSaveImages(x, os.path.join(folder, "img_" + str(idx) + "_img.png"),0)
+            seg = mergeSaveImages(y, os.path.join(folder, "img_" + str(idx) + "_seg.png"),0)
+            prd = mergeSaveImages(p, os.path.join(folder, "img_" + str(idx) + "_prd.png"),0)
+            blended_image = Image.blend(img, prd, alpha=0.5)
+            blended_image.save(os.path.join(folder, "img_" + str(idx) + "_img-prd.png"))    
+        else: 
+            break 
 
 def plotLoss(csvPath, doSave=1, doShow=0):
 
@@ -210,3 +220,4 @@ def plotLoss(csvPath, doSave=1, doShow=0):
        plt.savefig(outputPath)  # Saves the plot as 'plot.png'
     if doShow:
        plt.show()  # Optionally display the plot
+    plt.close()   

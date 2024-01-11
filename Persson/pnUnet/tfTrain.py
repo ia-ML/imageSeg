@@ -57,41 +57,46 @@ def train_fn(epoch,numEpochs, train_dataset, model, optimizer, loss_fn, DEVICE,n
 def tf_tensor(image, **kwargs):
     return tf.convert_to_tensor(image)
 
+def getImageTransforms(IMAGE_HEIGHT,IMAGE_WIDTH,onlineAugmentation):
+   # Create the main transformation pipeline        
+    normalizeTransform =  A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        )
+    augTransform = [ A.Rotate(limit=35, p=1.0),
+                     A.HorizontalFlip(p=0.5),
+                     A.VerticalFlip(p=0.1)]
+    tensorTransform = A.Lambda(image=tf_tensor)  # Convert images to tensors
+    train_transform = []
+    val_transform   = []
+    # Check if IMAGE_HEIGHT and IMAGE_WIDTH are not None
+    if IMAGE_HEIGHT is not None and IMAGE_WIDTH is not None:
+        train_transform.append(A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH))
+        val_transform.append(A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH))
+    if   onlineAugmentation:
+         train_transform.extend(augTransform)
+
+    train_transform.extend([normalizeTransform,tensorTransform])
+    val_transform.extend(normalizeTransform,tensorTransform)
+
+
+    train_transforms = A.Compose(train_transform)
+    val_transforms   = A.Compose(val_transform)
+    return train_transforms, val_transforms
 
 def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMAGE_WIDTH,
-         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir,datasetName,NUM_CLASSES=1,dataRatios=[0.90, 0.10, 0.0]):
-
+         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir,datasetName,NUM_CLASSES=1,dataRatios=[0.90, 0.10, 0.0],
+                                 datasetStructure=0, segExtension="mask", onlineAugmentation=1):
     print("================================================")
     print("    Segmentation Training Using U-Net TF       ")
     print("================================================")
     logPath        = os.path.join(output_dir,datasetName+"_"+str(NUM_CLASSES)+"_log.csv")
     finalModelPath = os.path.join(output_dir,datasetName+"_"+str(NUM_CLASSES)+"_model_pth.keras")
-    train_transform = A.Compose(
-        [
-            A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-            A.Rotate(limit=35, p=1.0),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.1),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            A.Lambda(image=tf_tensor),  # Convert images to TensorFlow tensors
-        ],
-    )
-   
-    val_transforms = A.Compose(
-        [
-            A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            A.Lambda(image=tf_tensor),  # Convert images to TensorFlow tensors
-        ],
-    )
+
+    train_transforms, val_transforms = getImageTransforms(IMAGE_HEIGHT,IMAGE_WIDTH,onlineAugmentation)
+     
+     
 
     # Initialize the model, loss function, and optimizer
     model = PNUNET(in_channels=3, out_channels=NUM_CLASSES)
@@ -106,7 +111,7 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
     # Create TensorFlow datasets for training and validation
     imgLsts = getImagesList(image_dir, rt=dataRatios, doPrint=1)
     trnLst, valLst, tstLst = imgLsts
-    train_dataset, val_dataset = get_loaders(image_dir, trnLst, valLst, BATCH_SIZE, train_transform, val_transforms)
+    train_dataset, val_dataset = get_loaders(image_dir, trnLst, valLst, BATCH_SIZE, train_transforms, val_transforms)
     n = len([i for i,x in enumerate(train_dataset)])
 
     if LOAD_MODEL:
@@ -168,8 +173,13 @@ if __name__ == "__main__":
     image_dir    = os.path.join(CarvanaPath,"inputData")
     output_dir   = os.path.join(CarvanaPath,"outputData")
     NUM_CLASSES = 1
-    dataRatios=[0.10, 0.05, 0.85]
+    dataRatios = [0.10,0.10,0.0]
+    datasetStructure   = 0
+    segExtension       = "mask"
+    onlineAugmentation = 1
 
     main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMAGE_WIDTH,
-         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir, NUM_CLASSES,dataRatios)
+         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir, NUM_CLASSES,dataRatios,
+                        datasetStructure, segExtension, onlineAugmentation)
+
 

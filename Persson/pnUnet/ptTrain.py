@@ -50,8 +50,38 @@ def train_fn(epoch,numEpochs, loader, model, optimizer, loss_fn, scaler, DEVICE)
     trainingLoss = round(trainingLoss/len(loader),2)
     return trainingLoss
 
+def getImageTransforms(IMAGE_HEIGHT,IMAGE_WIDTH,onlineAugmentation):
+   # Create the main transformation pipeline        
+    normalizeTransform =  A.Normalize(
+            mean=[0.0, 0.0, 0.0],
+            std=[1.0, 1.0, 1.0],
+            max_pixel_value=255.0,
+        )
+    augTransform = [ A.Rotate(limit=35, p=1.0),
+                     A.HorizontalFlip(p=0.5),
+                     A.VerticalFlip(p=0.1)]
+    tensorTransform = ToTensorV2()  # Convert images to tensors
+
+    train_transform = []
+    val_transform   = []
+    # Check if IMAGE_HEIGHT and IMAGE_WIDTH are not None
+    if IMAGE_HEIGHT is not None and IMAGE_WIDTH is not None:
+        train_transform.append(A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH))
+        val_transform.append(A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH))
+    if   onlineAugmentation:
+         train_transform.extend(augTransform)
+
+    train_transform.extend([normalizeTransform,tensorTransform])
+    val_transform.extend([normalizeTransform,tensorTransform])
+
+
+    train_transforms = A.Compose(train_transform)
+    val_transforms   = A.Compose(val_transform)
+    return train_transforms, val_transforms
+
 def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMAGE_WIDTH,
-         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir,datasetName,NUM_CLASSES=1,dataRatios=[0.90, 0.10, 0.0]):
+         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir,datasetName,NUM_CLASSES=1,dataRatios=[0.90, 0.10, 0.0],
+                                          datasetStructure=0, segExtension="mask", onlineAugmentation=1):
     
     print("================================================")
     print("    Segmentation Training Using U-Net Torch     ")
@@ -60,32 +90,7 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
     logPath        = os.path.join(output_dir,datasetName+"_"+str(NUM_CLASSES)+"_log.csv")
     finalModelPath = os.path.join(output_dir,datasetName+"_"+str(NUM_CLASSES)+"_model_pth.tar")
     
-    train_transform = A.Compose(
-        [
-            A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-            A.Rotate(limit=35, p=1.0),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.1),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            ToTensorV2(),
-        ],
-    )
-
-    val_transforms = A.Compose(
-        [
-            A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-            A.Normalize(
-                mean=[0.0, 0.0, 0.0],
-                std=[1.0, 1.0, 1.0],
-                max_pixel_value=255.0,
-            ),
-            ToTensorV2(),
-        ],
-    )
+    train_transforms, val_transforms = getImageTransforms(IMAGE_HEIGHT,IMAGE_WIDTH,onlineAugmentation)
 
     model = PNUNET(in_channels=3, out_channels=NUM_CLASSES).to(DEVICE)
     
@@ -99,7 +104,10 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
         
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-    imgLsts = getImagesList(image_dir, rt = dataRatios, doPrint=1)
+    imgLsts = getImagesList(image_dir, rt = dataRatios, doPrint=1,
+                                 datasetStructure=0,
+                                 segExtension="mask",                                 
+                                 onlineAugmentation=1  )
   
     trnLst,valLst,tstLst = imgLsts
 
@@ -108,11 +116,13 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
         trnLst,
         valLst,
         BATCH_SIZE,
-        train_transform,
+        train_transforms,
         val_transforms,
         NUM_WORKERS,
         PIN_MEMORY,
-    )
+        datasetStructure,
+        segExtension,
+        onlineAugmentation)
 
     if LOAD_MODEL:
         checkpoint = torch.load(finalModelPath)
@@ -146,6 +156,8 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
         #change the model mode to prediction
         model.eval()
         with torch.no_grad():
+            validationLoss = 0.0
+            i = 0 
             for x, y in val_loader:
                 x = x.to(DEVICE)
                 y = y.to(DEVICE).unsqueeze(1)
@@ -154,13 +166,17 @@ def main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMA
                 dx =     x.cpu().numpy().transpose(0, 2, 3, 1)
                 dy =     y.cpu().numpy().transpose(0, 2, 3, 1)
                 dp = preds.cpu().numpy().transpose(0, 2, 3, 1)
-                valData.append([dx,dy,dp ])
+                
+                validationLoss = validationLoss + check_accuracy([dy,dp])
+                if i < 11: 
+                   valData.append([dx,dy,dp ])                   
+                i=i+1   
         #change the model mode back to training
         model.train()
-
+        validationLoss = round(validationLoss/(i+1),4)
         #validationLoss = round(check_accuracy(val_loader, model, device=DEVICE),2)
-        validationLoss = check_accuracy(valData)
-        dice = round(1-validationLoss,2)
+        # validationLoss = check_accuracy(valData)
+        dice = round(1-validationLoss,4)
         # print some examples to a folder
         #save_predictions_as_imgs( val_loader, model, folder=output_dir, device=DEVICE )
         save_predictions_as_imgs( valData,folder=output_dir)
@@ -191,5 +207,11 @@ if __name__ == "__main__":
     image_dir    = os.path.join(CarvanaPath,"inputData")
     output_dir   = os.path.join(CarvanaPath,"outputData")
     NUM_CLASSES = 1
-    main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMAGE_WIDTH,PIN_MEMORY,LOAD_MODEL,image_dir,output_dir, NUM_CLASSES)
+    dataRatios = [0.10,0.10,0.0]
+    datasetStructure   = 0
+    segExtension       = "mask"
+    onlineAugmentation = 1
+    main(LEARNING_RATE,DEVICE,BATCH_SIZE,NUM_EPOCHS,NUM_WORKERS,IMAGE_HEIGHT,IMAGE_WIDTH,
+         PIN_MEMORY,LOAD_MODEL,image_dir,output_dir, NUM_CLASSES, dataRatios,
+         datasetStructure, segExtension, onlineAugmentation)
 
